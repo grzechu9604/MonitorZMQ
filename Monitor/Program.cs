@@ -1,24 +1,32 @@
 ﻿using Monitor.Configuration;
-using Monitor.Serialization;
+using Monitor.Wrappers;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-using ZeroMQ;
 
 namespace Monitor
 {
     class Program
     {
+        static readonly Dictionary<int, string> Configs = new Dictionary<int, string>
+        {
+            [1] = "config.xml",
+            [2] = "config2.xml",
+            [3] = "config3.xml",
+            [4] = "config4.xml",
+        };
+
+        static string GetConfigPath()
+        {
+            var key = Convert.ToInt16(Console.ReadLine());
+            return Configs[key];
+        }
+
         static void Main(string[] args)
         {
-            var config = ConfigurationReader.Read("config.xml");
-            var bytes = BinarySerializator<MonitorConfiguration>.ToByteArray(config);
-            var config2 = BinarySerializator<MonitorConfiguration>.ToObject(bytes);
+
+            var config = ConfigurationReader.Read(GetConfigPath());
+            var wrapper = new MonitorWrapper(config);
+            Console.WriteLine(wrapper.ID);
         }
     }
 }

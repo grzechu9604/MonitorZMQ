@@ -3,7 +3,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Monitor.Serialization
 {
-    public static class BinarySerializator<T>
+    public static class BinarySerializer<T>
     {
         public static byte[] ToByteArray(T obj)
         {

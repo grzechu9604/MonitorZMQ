@@ -43,11 +43,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Communication\Messages\ControlMessage.cs" />
+    <Compile Include="Communication\IDProviders\IDGetter.cs" />
+    <Compile Include="Communication\IDProviders\IDSetter.cs" />
+    <Compile Include="Communication\Messages\MessageFactory.cs" />
     <Compile Include="Configuration\ConfigurationReader.cs" />
     <Compile Include="Configuration\MonitorConfiguration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization\BinarySerializator.cs" />
+    <Compile Include="SpecificDataTypes\Enums.cs" />
+    <Compile Include="Wrappers\MonitorWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
