@@ -1,4 +1,5 @@
 ﻿using Monitor.Configuration;
+using Monitor.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +17,8 @@ namespace Monitor
         static void Main(string[] args)
         {
             var config = ConfigurationReader.Read("config.xml");
+            var bytes = BinarySerializator<MonitorConfiguration>.ToByteArray(config);
+            var config2 = BinarySerializator<MonitorConfiguration>.ToObject(bytes);
         }
     }
 }
