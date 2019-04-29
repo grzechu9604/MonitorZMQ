@@ -43,10 +43,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Communication\Handlers\MessageHandler.cs" />
+    <Compile Include="Communication\Listeners\MessageListener.cs" />
     <Compile Include="Communication\Messages\ControlMessage.cs" />
     <Compile Include="Communication\IDProviders\IDGetter.cs" />
     <Compile Include="Communication\IDProviders\IDSetter.cs" />
     <Compile Include="Communication\Messages\MessageFactory.cs" />
+    <Compile Include="Communication\Senders\MessageSender.cs" />
+    <Compile Include="Communication\Technic\LamportTimeProvider.cs" />
     <Compile Include="Configuration\ConfigurationReader.cs" />
     <Compile Include="Configuration\MonitorConfiguration.cs" />
     <Compile Include="Program.cs" />

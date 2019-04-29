@@ -1,4 +1,6 @@
-﻿using Monitor.Configuration;
+﻿using Monitor.Communication.Messages;
+using Monitor.Communication.Senders;
+using Monitor.Configuration;
 using Monitor.Wrappers;
 using System;
 using System.Collections.Generic;
@@ -23,10 +25,8 @@ namespace Monitor
 
         static void Main(string[] args)
         {
-
             var config = ConfigurationReader.Read(GetConfigPath());
             var wrapper = new MonitorWrapper(config);
-            Console.WriteLine(wrapper.ID);
         }
     }
 }

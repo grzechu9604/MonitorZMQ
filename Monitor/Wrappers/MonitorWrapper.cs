@@ -1,4 +1,7 @@
 ﻿using Monitor.Communication.IDProviders;
+using Monitor.Communication.Listeners;
+using Monitor.Communication.Messages;
+using Monitor.Communication.Senders;
 using Monitor.Configuration;
 using System;
 using System.Collections.Generic;
@@ -20,12 +23,25 @@ namespace Monitor.Wrappers
             if (config.IsServer)
             {
                 ID = 0;
-                IDSetter.RunService(config.ListeningAddress, config.Adresses.Count);
+                IDSetter.RunService(config.ServerAddress, config.Adresses.Count);
             }
             else
             {
                 ID = IDGetter.GetId(config.ServerAddress);
             }
+
+            Console.WriteLine(ID);
+            Console.WriteLine(config.ListeningAddress);
+
+            MessageListener.Instance.ListeningAddress = config.ListeningAddress;
+            MessageListener.Instance.ListenerID = ID;
+            MessageListener.Instance.StartListening();
+
+            var testMessage = MessageFactory.CreateMessage(0, 10, 10, 10, SpecificDataTypes.MessageTypes.TEST_REQ);
+
+            MessageSender.Instance.Adresses = config.Adresses;
+            MessageSender.Instance.SenderID = ID;
+            MessageSender.Instance.BrodcastMessage(testMessage);
         }
     }
 }
