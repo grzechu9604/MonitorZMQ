@@ -1,4 +1,5 @@
 ﻿using Monitor.Communication.Messages;
+using Monitor.Communication.Technic;
 using Monitor.Serialization;
 using Monitor.SpecificDataTypes;
 using System;
@@ -43,24 +44,21 @@ namespace Monitor.Communication.Listeners
 
         public void Listen()
         {
-            using (ZContext context = new ZContext())
+            using (ZSocket responser = new ZSocket(ZContextProvider.GlobalContext, ZSocketType.REP))
             {
-                using (ZSocket responser = new ZSocket(context, ZSocketType.REP))
+                responser.Bind(ListeningAddress);
+                while (true)
                 {
-                    responser.Bind(ListeningAddress);
-                    while (true)
-                    {
-                        ZFrame frame = responser.ReceiveFrame();
-                        ControlMessage message = BinarySerializer<ControlMessage>.ToObject(frame.Read());
-                        Console.WriteLine($"ML {message.Type} odebrane od {message.SenderId}");
+                    ZFrame frame = responser.ReceiveFrame();
+                    ControlMessage message = BinarySerializer<ControlMessage>.ToObject(frame.Read());
+                    Console.WriteLine($"ML {message.Type} odebrane od {message.SenderId}");
 
-                        MessageTypes responseType = MessageTypes.TEST_RESP;
-                        using (ZFrame responseFrame = MessageFactory.CreateMessageZFrame(ListenerID.Value, 0, -1, 0, responseType))
-                        {
-                            responser.Send(responseFrame);
-                        }
-                        Console.WriteLine($"ML {responseType} wysłane do {message.SenderId}");
+                    MessageTypes responseType = MessageTypes.TEST_RESP;
+                    using (ZFrame responseFrame = MessageFactory.CreateMessageZFrame(ListenerID.Value, 0, -1, 0, responseType))
+                    {
+                        responser.Send(responseFrame);
                     }
+                    Console.WriteLine($"ML {responseType} wysłane do {message.SenderId}");
                 }
             }
         }

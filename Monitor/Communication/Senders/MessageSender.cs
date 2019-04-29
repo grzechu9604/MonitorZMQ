@@ -1,4 +1,5 @@
 ﻿using Monitor.Communication.Messages;
+using Monitor.Communication.Technic;
 using Monitor.Serialization;
 using System;
 using System.Collections.Generic;
@@ -35,13 +36,11 @@ namespace Monitor.Communication.Senders
             }
 
             message.SenderId = SenderID.Value;
-
-            using (ZContext context = new ZContext())
-            using (ZSocket requester = new ZSocket(context, ZSocketType.REQ))
+            Adresses.ForEach(address =>
             {
-                Adresses.ForEach(address => { 
+                using (ZSocket requester = new ZSocket(ZContextProvider.GlobalContext, ZSocketType.REQ))
+                {
                     requester.Connect(address);
-                    ZFrame frame = new ZFrame();
                     requester.Send(new ZFrame(BinarySerializer<ControlMessage>.ToByteArray(message)));
                     Console.WriteLine($"MS wysłane {message.Type} do {address}");
 
@@ -50,8 +49,8 @@ namespace Monitor.Communication.Senders
                         ControlMessage rcvedMsg = BinarySerializer<ControlMessage>.ToObject(reply.Read());
                         Console.WriteLine($"MS {rcvedMsg.Type} odebrane od {rcvedMsg.SenderId}");
                     }
-                });
-            }
+                }
+            });
         }
     }
 }

@@ -51,6 +51,7 @@
     <Compile Include="Communication\Messages\MessageFactory.cs" />
     <Compile Include="Communication\Senders\MessageSender.cs" />
     <Compile Include="Communication\Technic\LamportTimeProvider.cs" />
+    <Compile Include="Communication\Technic\ZContextProvider.cs" />
     <Compile Include="Configuration\ConfigurationReader.cs" />
     <Compile Include="Configuration\MonitorConfiguration.cs" />
     <Compile Include="Program.cs" />

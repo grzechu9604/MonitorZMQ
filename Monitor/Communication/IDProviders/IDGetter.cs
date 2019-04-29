@@ -1,4 +1,5 @@
 ﻿using Monitor.Communication.Messages;
+using Monitor.Communication.Technic;
 using Monitor.Serialization;
 using Monitor.SpecificDataTypes;
 using ZeroMQ;
@@ -9,8 +10,7 @@ namespace Monitor.Communication.IDProviders
     {
         public static int GetId(string serverAddress)
         {
-            using (ZContext context = new ZContext())
-            using (ZSocket requester = new ZSocket(context, ZSocketType.REQ))
+            using (ZSocket requester = new ZSocket(ZContextProvider.GlobalContext, ZSocketType.REQ))
             {
                 requester.Connect(serverAddress);
                 ZFrame frame = MessageFactory.CreateMessageZFrame(-1, 0, -1, 0, MessageTypes.IDRequest);
