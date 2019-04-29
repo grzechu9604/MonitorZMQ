@@ -36,18 +36,18 @@ namespace Monitor.Communication.Senders
 
             message.SenderId = SenderID.Value;
 
-            using (var context = new ZContext())
-            using (var requester = new ZSocket(context, ZSocketType.REQ))
+            using (ZContext context = new ZContext())
+            using (ZSocket requester = new ZSocket(context, ZSocketType.REQ))
             {
                 Adresses.ForEach(address => { 
                     requester.Connect(address);
-                    var frame = new ZFrame();
+                    ZFrame frame = new ZFrame();
                     requester.Send(new ZFrame(BinarySerializer<ControlMessage>.ToByteArray(message)));
                     Console.WriteLine($"MS wysłane {message.Type} do {address}");
 
                     using (ZFrame reply = requester.ReceiveFrame())
                     {
-                        var rcvedMsg = BinarySerializer<ControlMessage>.ToObject(reply.Read());
+                        ControlMessage rcvedMsg = BinarySerializer<ControlMessage>.ToObject(reply.Read());
                         Console.WriteLine($"MS {rcvedMsg.Type} odebrane od {rcvedMsg.SenderId}");
                     }
                 });

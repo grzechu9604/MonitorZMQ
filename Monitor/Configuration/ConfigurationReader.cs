@@ -8,7 +8,7 @@ namespace Monitor.Configuration
         public static MonitorConfiguration Read(string path)
         {
             XmlSerializer ser = new XmlSerializer(typeof(MonitorConfiguration));
-            using (var reader = new StreamReader(path))
+            using (StreamReader reader = new StreamReader(path))
             {
                 return ser.Deserialize(reader) as MonitorConfiguration;
             }

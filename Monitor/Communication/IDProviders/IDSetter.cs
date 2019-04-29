@@ -9,16 +9,16 @@ namespace Monitor.Communication.IDProviders
     {
         public static void RunService(string listeningAddress, int processesAmount)
         {
-            using (var context = new ZContext())
+            using (ZContext context = new ZContext())
             {
-                using (var responser = new ZSocket(context, ZSocketType.REP))
+                using (ZSocket responser = new ZSocket(context, ZSocketType.REP))
                 {
                     responser.Bind(listeningAddress);
 
                     for (int i = 1; i < processesAmount + 1; i++)
                     {
-                        var frame = responser.ReceiveFrame();
-                        var message = BinarySerializer<ControlMessage>.ToObject(frame.Read());
+                        ZFrame frame = responser.ReceiveFrame();
+                        ControlMessage message = BinarySerializer<ControlMessage>.ToObject(frame.Read());
 
                         int idToResponse = i;
                         MessageTypes responseType = MessageTypes.IDSet;
@@ -30,7 +30,7 @@ namespace Monitor.Communication.IDProviders
                             i--;
                         }
 
-                        var responseFrame = MessageFactory.CreateMessageZFrame(0, 0, -1, idToResponse, responseType);
+                        ZFrame responseFrame = MessageFactory.CreateMessageZFrame(0, 0, -1, idToResponse, responseType);
                         responser.Send(responseFrame);
                     }
                 }

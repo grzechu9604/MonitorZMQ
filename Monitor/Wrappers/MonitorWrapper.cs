@@ -37,7 +37,7 @@ namespace Monitor.Wrappers
             MessageListener.Instance.ListenerID = ID;
             MessageListener.Instance.StartListening();
 
-            var testMessage = MessageFactory.CreateMessage(0, 10, 10, 10, SpecificDataTypes.MessageTypes.TEST_REQ);
+            ControlMessage testMessage = MessageFactory.CreateMessage(0, 10, 10, 10, SpecificDataTypes.MessageTypes.TEST_REQ);
 
             MessageSender.Instance.Adresses = config.Adresses;
             MessageSender.Instance.SenderID = ID;

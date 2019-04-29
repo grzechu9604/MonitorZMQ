@@ -20,8 +20,8 @@ namespace Monitor.Communication.Messages
 
         public static ZFrame CreateMessageZFrame(int senderId, ulong timer, int monitorId, int data, MessageTypes type)
         {
-            var message = CreateMessage(senderId, timer, monitorId, data, type);
-            var messageBytes = BinarySerializer<ControlMessage>.ToByteArray(message);
+            ControlMessage message = CreateMessage(senderId, timer, monitorId, data, type);
+            byte[] messageBytes = BinarySerializer<ControlMessage>.ToByteArray(message);
             return new ZFrame(messageBytes);
         }
     }

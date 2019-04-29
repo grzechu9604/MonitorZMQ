@@ -43,19 +43,19 @@ namespace Monitor.Communication.Listeners
 
         public void Listen()
         {
-            using (var context = new ZContext())
+            using (ZContext context = new ZContext())
             {
-                using (var responser = new ZSocket(context, ZSocketType.REP))
+                using (ZSocket responser = new ZSocket(context, ZSocketType.REP))
                 {
                     responser.Bind(ListeningAddress);
                     while (true)
                     {
-                        var frame = responser.ReceiveFrame();
-                        var message = BinarySerializer<ControlMessage>.ToObject(frame.Read());
+                        ZFrame frame = responser.ReceiveFrame();
+                        ControlMessage message = BinarySerializer<ControlMessage>.ToObject(frame.Read());
                         Console.WriteLine($"ML {message.Type} odebrane od {message.SenderId}");
 
                         MessageTypes responseType = MessageTypes.TEST_RESP;
-                        using (var responseFrame = MessageFactory.CreateMessageZFrame(ListenerID.Value, 0, -1, 0, responseType))
+                        using (ZFrame responseFrame = MessageFactory.CreateMessageZFrame(ListenerID.Value, 0, -1, 0, responseType))
                         {
                             responser.Send(responseFrame);
                         }

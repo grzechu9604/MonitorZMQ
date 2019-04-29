@@ -19,14 +19,14 @@ namespace Monitor
 
         static string GetConfigPath()
         {
-            var key = Convert.ToInt16(Console.ReadLine());
+            short key = Convert.ToInt16(Console.ReadLine());
             return Configs[key];
         }
 
         static void Main(string[] args)
         {
-            var config = ConfigurationReader.Read(GetConfigPath());
-            var wrapper = new MonitorWrapper(config);
+            MonitorConfiguration config = ConfigurationReader.Read(GetConfigPath());
+            MonitorWrapper wrapper = new MonitorWrapper(config);
         }
     }
 }
