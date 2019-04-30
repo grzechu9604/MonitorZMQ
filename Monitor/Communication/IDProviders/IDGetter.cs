@@ -13,13 +13,13 @@ namespace Monitor.Communication.IDProviders
             using (ZSocket requester = new ZSocket(ZContextProvider.GlobalContext, ZSocketType.REQ))
             {
                 requester.Connect(serverAddress);
-                ZFrame frame = MessageFactory.CreateMessageZFrame(0, -1, 0, MessageTypes.IDRequest);
+                ZFrame frame = MessageFactory.CreateMessageZFrame(0, -1, 0, -1, MessageTypes.IDRequest);
                 requester.Send(frame);
 
                 using (ZFrame reply = requester.ReceiveFrame())
                 {
                     ControlMessage message = BinarySerializer<ControlMessage>.ToObject(reply.Read());
-                    return message.Data;
+                    return message.SignalDestination;
                 }
             }
         }

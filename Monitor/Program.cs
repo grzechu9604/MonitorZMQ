@@ -31,18 +31,37 @@ namespace Monitor
             MonitorWrapper wrapper = MonitorWrapper.Instance;
             wrapper.ApplyConfig(config);
             wrapper.Start();
-            wrapper.CreateMonitor(1);
+            wrapper.CreateMonitorIfNotExists(1);
             DistributedMonitor monitor = wrapper.GetMonitor(1);
 
             while(true)
             { 
-            monitor.Acquire();
+                monitor.Acquire();
+                Console.WriteLine($"Critical section {wrapper.ID}");
+                Thread.Sleep(1000);
+                var cv = monitor.CreateConditionalVariableIfNotExists(1);
+                if (wrapper.ID == 0 || wrapper.ID == 1 || wrapper.ID == 2)
+                {
+                    Console.WriteLine($"Wait {wrapper.ID}");
+                    cv.Wait();
+                    Console.WriteLine($"After Wait {wrapper.ID}");
+                    Thread.Sleep(1000);
+                }
+                else if (wrapper.ID == 23)
+                {
+                    Console.WriteLine($"Signal {wrapper.ID}");
+                    cv.Signal();
+                    Console.WriteLine($"After signal {wrapper.ID}");
+                }
+                else
+                {
+                    Console.WriteLine($"Signal all {wrapper.ID}");
+                    cv.SignalAll();
+                    Console.WriteLine($"After Signal all {wrapper.ID}");
+                }
+                Console.WriteLine($"Relese critical section {wrapper.ID}");
 
-            Console.WriteLine($"Critical section {wrapper.ID}");
-            Thread.Sleep(2000);
-            Console.WriteLine($"Relese critical section {wrapper.ID}");
-
-            monitor.Release();
+                monitor.Release();
             }
         }
     }

@@ -20,14 +20,16 @@ namespace Monitor.SpecificDataTypes
             ID = id;
         }
 
-        public void CreateConditionalVariable(int id)
+        public ConditionalVariable CreateConditionalVariableIfNotExists(int id)
         {
-            if (ConditionalVariables.Any(cv => cv.ID.Equals(id)))
+            var variable = GetConditionalVariable(id);
+            if (variable != null)
             {
-                throw new InvalidOperationException("ConditionalVariabl with given ID already exists");
+                return variable;
             }
-
-            ConditionalVariables.Add(new ConditionalVariable(id, this));
+            variable = new ConditionalVariable(id, this);
+            ConditionalVariables.Add(variable);
+            return variable;
         }
 
         public ConditionalVariable GetConditionalVariable(int id)

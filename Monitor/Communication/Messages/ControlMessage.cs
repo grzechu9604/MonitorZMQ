@@ -9,7 +9,8 @@ namespace Monitor.Communication.Messages
         public int MonitorId { get; set; }
         public ulong Timer { get; set; }
         public int SenderId { get; set; }
-        public int Data { get; set; }
+        public int ConditionalVariableId { get; set; }
+        public int SignalDestination { get; set; }
         public MessageTypes Type { get; set; }
     }
 }

@@ -7,6 +7,9 @@
         Reset = 3,
         MonitorAcquire = 4,
         MonitorRelease = 5,
+        Wait = 6,
+        Signal = 7,
+        SignalAll = 8,
         Acknowledgement = 100,
         Negation = 101
     }

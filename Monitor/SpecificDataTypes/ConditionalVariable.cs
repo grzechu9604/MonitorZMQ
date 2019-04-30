@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Monitor.Communication.Handlers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,10 @@ namespace Monitor.SpecificDataTypes
     class ConditionalVariable
     {
         public readonly int ID;
-        private readonly DistributedMonitor Parent;
+        public List<int> Waiters = new List<int>();
+        public readonly DistributedMonitor Parent;
+
+        public object Value { get; set; }
 
         public ConditionalVariable(int id, DistributedMonitor monitor)
         {
@@ -24,21 +28,37 @@ namespace Monitor.SpecificDataTypes
                 throw new InvalidOperationException("Not owner exception");
             }
 
+            CommunicationHandler.Instance.SendWaitMessage(this);
+
             Parent.Release();
 
-            //TODO: Oczekiwanie na sygnał od innego procesu
+            StopCurrentThread();
 
             Parent.Acquire();
         }
 
         public void Signal()
         {
-
+            CommunicationHandler.Instance.SendSignalMessage(this);
         }
 
         public void SignalAll()
         {
+            CommunicationHandler.Instance.SendSignalAllMessage(this);
+        }
 
+        public void StopCurrentThread()
+        {
+            System.Threading.Monitor.Enter(this); // Just to execute wait
+            System.Threading.Monitor.Wait(this);
+            System.Threading.Monitor.Exit(this);
+        }
+
+        public void WakeThread()
+        {
+            System.Threading.Monitor.Enter(this); // Just to execute wait
+            System.Threading.Monitor.Pulse(this);
+            System.Threading.Monitor.Exit(this);
         }
     }
 }

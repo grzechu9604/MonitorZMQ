@@ -27,7 +27,7 @@ namespace Monitor.Communication.Handlers
         {
             bool succeded = false;
             var message = MessageFactory.CreateMessage(
-                    LamportTimeProvider.Instance.IncrementAndReturn(), monitor.ID, -1, MessageTypes.MonitorAcquire);
+                    LamportTimeProvider.Instance.IncrementAndReturn(), monitor.ID, -1, -1, MessageTypes.MonitorAcquire);
             MessageHandler.MyCurrentMessage = message;
             while (!succeded)
             {
@@ -43,8 +43,39 @@ namespace Monitor.Communication.Handlers
         public void SendReleaseMessage(DistributedMonitor monitor)
         {
             var message = MessageFactory.CreateMessage(
-                LamportTimeProvider.Instance.IncrementAndReturn(), monitor.ID, -1, MessageTypes.MonitorRelease);
+                LamportTimeProvider.Instance.IncrementAndReturn(), monitor.ID, -1, -1, MessageTypes.MonitorRelease);
             MessageSender.Instance.BrodcastMessage(message);
         }
+
+        public void SendWaitMessage(ConditionalVariable cv)
+        {
+            var message = MessageFactory.CreateMessage(
+                LamportTimeProvider.Instance.IncrementAndReturn(), cv.Parent.ID, cv.ID, -1, MessageTypes.Wait);
+            MessageSender.Instance.BrodcastMessage(message);
+        }
+
+        public void SendSignalMessage(ConditionalVariable cv)
+        {
+            try
+            {
+                var firstWaiter = cv.Waiters.First();
+                cv.Waiters.RemoveAll(w => w.Equals(firstWaiter));
+                var message = MessageFactory.CreateMessage(
+                    LamportTimeProvider.Instance.IncrementAndReturn(), cv.Parent.ID, cv.ID, firstWaiter, MessageTypes.Signal);
+                MessageSender.Instance.BrodcastMessage(message);
+            }
+            catch (InvalidOperationException)
+            {
+                Console.WriteLine("Nie ma kogo budzić!");
+            }
+        }
+
+        public void SendSignalAllMessage(ConditionalVariable cv)
+        {
+            var message = MessageFactory.CreateMessage(
+                LamportTimeProvider.Instance.IncrementAndReturn(), cv.Parent.ID, cv.ID, -1, MessageTypes.SignalAll);
+            MessageSender.Instance.BrodcastMessage(message);
+        }
+
     }
 }

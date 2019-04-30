@@ -7,21 +7,22 @@ namespace Monitor.Communication.Messages
 {
     static class MessageFactory
     {
-        public static ControlMessage CreateMessage(ulong timer, int monitorId, int data, MessageTypes type)
+        public static ControlMessage CreateMessage(ulong timer, int monitorId, int variableId, int signalDestId, MessageTypes type)
         {
             return new ControlMessage()
             {
                 SenderId = MonitorWrapper.Instance.ID,
                 Timer = timer,
                 MonitorId = monitorId,
-                Data = data,
+                ConditionalVariableId = variableId,
+                SignalDestination = signalDestId,
                 Type = type
             };
         }
 
-        public static ZFrame CreateMessageZFrame(ulong timer, int monitorId, int data, MessageTypes type)
+        public static ZFrame CreateMessageZFrame(ulong timer, int monitorId, int variableId, int signalDestId, MessageTypes type)
         {
-            ControlMessage message = CreateMessage(timer, monitorId, data, type);
+            ControlMessage message = CreateMessage(timer, monitorId, variableId, signalDestId, type);
             return CreateMessageZFrame(message);
         }
 

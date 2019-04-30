@@ -63,18 +63,23 @@ namespace Monitor.Wrappers
             MessageSender.Instance.SenderID = ID;
         }
 
-        public void CreateMonitor(int id)
+        public DistributedMonitor CreateMonitorIfNotExists(int id)
         {
             System.Threading.Monitor.Enter(_monitorsLock);
 
-            if (Monitors.Any(m => m.ID.Equals(id)))
+            var monitor = GetMonitor(id);
+            if (monitor != null)
             {
-                throw new InvalidOperationException("Monitor already exists!");
+                return monitor;
             }
 
-            Monitors.Add(new DistributedMonitor(id));
+            monitor = new DistributedMonitor(id);
+
+            Monitors.Add(monitor);
 
             System.Threading.Monitor.Exit(_monitorsLock);
+
+            return monitor;
         }
 
         public void LockMonitors()

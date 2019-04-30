@@ -38,8 +38,43 @@ namespace Monitor.Communication.Handlers
         private readonly Dictionary<MessageTypes, Func<ControlMessage, ControlMessage>> handlers = new Dictionary<MessageTypes, Func<ControlMessage, ControlMessage>>()
         {
             [MessageTypes.MonitorAcquire] = HandleMonitorAcquire,
-            [MessageTypes.MonitorRelease] = HandleMonitorRelease
+            [MessageTypes.MonitorRelease] = HandleMonitorRelease,
+            [MessageTypes.Wait] = HandleWait,
+            [MessageTypes.Signal] = HandleSignal,
+            [MessageTypes.SignalAll] = HandleSignalAll
         };
+
+        private static ControlMessage HandleWait(ControlMessage message)
+        {
+            var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
+            monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId).Waiters.Add(message.SenderId);
+            return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
+        }
+
+        private static ControlMessage HandleSignal(ControlMessage message)
+        {
+            var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
+            var variable = monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId);
+            variable.Waiters.RemoveAll(e => e.Equals(message.SenderId));
+
+            if (message.SignalDestination.Equals(MonitorWrapper.Instance.ID))
+            {
+                variable.WakeThread();
+            }
+
+            return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
+        }
+
+        private static ControlMessage HandleSignalAll(ControlMessage message)
+        {
+            var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
+            var variable = monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId);
+            variable.Waiters.Clear();
+
+            variable.WakeThread();
+
+            return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
+        }
 
         private static ControlMessage HandleMonitorAcquire(ControlMessage message)
         {
@@ -71,7 +106,7 @@ namespace Monitor.Communication.Handlers
                 }
             }
 
-            var responseMessage = MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, -1, responseType);
+            var responseMessage = MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, -1, -1, responseType);
 
             wrapper.UnlockMonitors();
 
@@ -80,7 +115,7 @@ namespace Monitor.Communication.Handlers
 
         private static ControlMessage HandleMonitorRelease(ControlMessage message)
         {
-            return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, -1, MessageTypes.Acknowledgement);
+            return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, -1, -1, MessageTypes.Acknowledgement);
         }
 
         public ControlMessage HandleMessage(ControlMessage message)
@@ -91,9 +126,9 @@ namespace Monitor.Communication.Handlers
                 LamportTimeProvider.Instance.IncrementAndReturnWithMin(message.Timer);
                 returnMessage = handlers[message.Type].Invoke(message);
             }
-            catch(KeyNotFoundException)
+            catch (KeyNotFoundException)
             {
-                returnMessage = MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), -1, -1, MessageTypes.Reset);
+                returnMessage = MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), -1, -1, -1, MessageTypes.Reset);
             }
 
             return returnMessage;
