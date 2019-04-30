@@ -14,31 +14,51 @@ namespace Monitor.Wrappers
 {
     class MonitorWrapper
     {
-        private readonly MonitorConfiguration _config;
-        public readonly int ID;
+        private MonitorConfiguration _config;
+        public int ID { get; private set; }
         private readonly List<DistributedMonitor> Monitors = new List<DistributedMonitor>();
 
-        public MonitorWrapper(MonitorConfiguration config)
+        #region Singleton
+        public static MonitorWrapper Instance { get; } = new MonitorWrapper();
+        private MonitorWrapper()
         {
-            _config = config;
+        }
+        #endregion
 
-            if (config.IsServer)
+        public void ApplyConfig(MonitorConfiguration config)
+        {
+            if (_config != null)
+            {
+                throw new InvalidOperationException("You can apply config only once!");
+            }
+
+            _config = config;
+        }
+
+        public void Start()
+        {
+            if (_config == null)
+            {
+                throw new InvalidOperationException("Apply config first!");
+            }
+
+            if (_config.IsServer)
             {
                 ID = 0;
-                IDSetter.RunService(config.ServerAddress, config.Adresses.Count);
+                IDSetter.RunService(_config.ServerAddress, _config.Adresses.Count);
             }
             else
             {
-                ID = IDGetter.GetId(config.ServerAddress);
+                ID = IDGetter.GetId(_config.ServerAddress);
             }
 
             Console.WriteLine(ID);
-            Console.WriteLine(config.ListeningAddress);
+            Console.WriteLine(_config.ListeningAddress);
 
-            MessageListener.Instance.ListeningAddress = config.ListeningAddress;
+            MessageListener.Instance.ListeningAddress = _config.ListeningAddress;
             MessageListener.Instance.ListenerID = ID;
             MessageListener.Instance.StartListening();
-            MessageSender.Instance.Adresses = config.Adresses;
+            MessageSender.Instance.Adresses = _config.Adresses;
             MessageSender.Instance.SenderID = ID;
         }
 

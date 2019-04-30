@@ -28,7 +28,9 @@ namespace Monitor
         static void Main(string[] args)
         {
             MonitorConfiguration config = ConfigurationReader.Read(GetConfigPath());
-            MonitorWrapper wrapper = new MonitorWrapper(config);
+            MonitorWrapper wrapper = MonitorWrapper.Instance;
+            wrapper.ApplyConfig(config);
+            wrapper.Start();
             wrapper.CreateMonitor(1);
             DistributedMonitor monitor = wrapper.GetMonitor(1);
 
