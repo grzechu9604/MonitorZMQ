@@ -29,7 +29,7 @@ namespace Monitor.Communication.IDProviders
                         i--;
                     }
 
-                    ZFrame responseFrame = MessageFactory.CreateMessageZFrame(0, 0, -1, idToResponse, responseType);
+                    ZFrame responseFrame = MessageFactory.CreateMessageZFrame(0, -1, idToResponse, responseType);
                     responser.Send(responseFrame);
                 }
             }

@@ -8,5 +8,6 @@ namespace Monitor.Communication.Handlers
 {
     class MessageHandler
     {
+
     }
 }

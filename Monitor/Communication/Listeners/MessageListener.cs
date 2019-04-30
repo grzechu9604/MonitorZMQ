@@ -54,7 +54,7 @@ namespace Monitor.Communication.Listeners
                     Console.WriteLine($"ML {message.Type} odebrane od {message.SenderId}");
 
                     MessageTypes responseType = MessageTypes.TEST_RESP;
-                    using (ZFrame responseFrame = MessageFactory.CreateMessageZFrame(ListenerID.Value, 0, -1, 0, responseType))
+                    using (ZFrame responseFrame = MessageFactory.CreateMessageZFrame(0, -1, 0, responseType))
                     {
                         responser.Send(responseFrame);
                     }

@@ -6,11 +6,11 @@ namespace Monitor.Communication.Messages
 {
     static class MessageFactory
     {
-        public static ControlMessage CreateMessage(int senderId, ulong timer, int monitorId, int data, MessageTypes type)
+        public static ControlMessage CreateMessage(ulong timer, int monitorId, int data, MessageTypes type)
         {
             return new ControlMessage()
             {
-                SenderId = senderId,
+                SenderId = -1,
                 Timer = timer,
                 MonitorId = monitorId,
                 Data = data,
@@ -18,9 +18,9 @@ namespace Monitor.Communication.Messages
             };
         }
 
-        public static ZFrame CreateMessageZFrame(int senderId, ulong timer, int monitorId, int data, MessageTypes type)
+        public static ZFrame CreateMessageZFrame(ulong timer, int monitorId, int data, MessageTypes type)
         {
-            ControlMessage message = CreateMessage(senderId, timer, monitorId, data, type);
+            ControlMessage message = CreateMessage(timer, monitorId, data, type);
             byte[] messageBytes = BinarySerializer<ControlMessage>.ToByteArray(message);
             return new ZFrame(messageBytes);
         }

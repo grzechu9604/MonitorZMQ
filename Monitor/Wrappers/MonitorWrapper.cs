@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Monitor.SpecificDataTypes;
 
 namespace Monitor.Wrappers
 {
@@ -15,6 +16,7 @@ namespace Monitor.Wrappers
     {
         private readonly MonitorConfiguration _config;
         public readonly int ID;
+        private readonly List<DistributedMonitor> Monitors = new List<DistributedMonitor>();
 
         public MonitorWrapper(MonitorConfiguration config)
         {
@@ -36,12 +38,23 @@ namespace Monitor.Wrappers
             MessageListener.Instance.ListeningAddress = config.ListeningAddress;
             MessageListener.Instance.ListenerID = ID;
             MessageListener.Instance.StartListening();
-
-            ControlMessage testMessage = MessageFactory.CreateMessage(0, 10, 10, 10, SpecificDataTypes.MessageTypes.TEST_REQ);
-
             MessageSender.Instance.Adresses = config.Adresses;
             MessageSender.Instance.SenderID = ID;
-            MessageSender.Instance.BrodcastMessage(testMessage);
+        }
+
+        public void CreateMonitor(int id)
+        {
+            if (Monitors.Any(m => m.ID.Equals(id)))
+            {
+                throw new InvalidOperationException("Monitor already exists!");
+            }
+
+            Monitors.Add(new DistributedMonitor(id));
+        }
+
+        public DistributedMonitor GetMonitor(int id)
+        {
+            return Monitors.FirstOrDefault(m => m.ID.Equals(id));
         }
     }
 }
