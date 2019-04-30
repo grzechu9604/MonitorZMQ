@@ -1,4 +1,5 @@
-﻿using Monitor.Communication.Messages;
+﻿using Monitor.Communication.Handlers;
+using Monitor.Communication.Messages;
 using Monitor.Communication.Technic;
 using Monitor.Serialization;
 using Monitor.SpecificDataTypes;
@@ -51,14 +52,14 @@ namespace Monitor.Communication.Listeners
                 {
                     ZFrame frame = responser.ReceiveFrame();
                     ControlMessage message = BinarySerializer<ControlMessage>.ToObject(frame.Read());
-                    Console.WriteLine($"ML {message.Type} odebrane od {message.SenderId}");
+                    //Console.WriteLine($"ML {message.Type} odebrane od {message.SenderId}");
 
-                    MessageTypes responseType = MessageTypes.TEST_RESP;
-                    using (ZFrame responseFrame = MessageFactory.CreateMessageZFrame(0, -1, 0, responseType))
+                    var responseMessage = MessageHandler.Instance.HandleMessage(message);
+                    using (ZFrame responseFrame = MessageFactory.CreateMessageZFrame(responseMessage))
                     {
                         responser.Send(responseFrame);
                     }
-                    Console.WriteLine($"ML {responseType} wysłane do {message.SenderId}");
+                    //Console.WriteLine($"ML {responseMessage.Type} wysłane do {message.SenderId}");
                 }
             }
         }

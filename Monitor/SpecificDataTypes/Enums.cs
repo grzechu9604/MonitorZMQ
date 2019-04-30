@@ -7,7 +7,7 @@
         Reset = 3,
         MonitorAcquire = 4,
         MonitorRelease = 5,
-        TEST_REQ = 998,
-        TEST_RESP = 999
+        Acknowledgement = 100,
+        Negation = 101
     }
 }

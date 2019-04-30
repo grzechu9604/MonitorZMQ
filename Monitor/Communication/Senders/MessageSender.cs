@@ -1,6 +1,7 @@
 ﻿using Monitor.Communication.Messages;
 using Monitor.Communication.Technic;
 using Monitor.Serialization;
+using Monitor.SpecificDataTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,23 +35,56 @@ namespace Monitor.Communication.Senders
             {
                 throw new InvalidOperationException("Set SenderID first!");
             }
-
-            message.SenderId = SenderID.Value;
+            
             Adresses.ForEach(address =>
             {
                 using (ZSocket requester = new ZSocket(ZContextProvider.GlobalContext, ZSocketType.REQ))
                 {
                     requester.Connect(address);
                     requester.Send(new ZFrame(BinarySerializer<ControlMessage>.ToByteArray(message)));
-                    Console.WriteLine($"MS wysłane {message.Type} do {address}");
+                    //Console.WriteLine($"MS wysłane {message.Type} do {address}");
 
                     using (ZFrame reply = requester.ReceiveFrame())
                     {
                         ControlMessage rcvedMsg = BinarySerializer<ControlMessage>.ToObject(reply.Read());
-                        Console.WriteLine($"MS {rcvedMsg.Type} odebrane od {rcvedMsg.SenderId}");
+                        //Console.WriteLine($"MS {rcvedMsg.Type} odebrane od {rcvedMsg.SenderId}");
                     }
                 }
             });
+        }
+
+        public bool BrodcastMessageWithResult(ControlMessage message, MessageTypes wantedType)
+        {
+            bool succes = true;
+
+            if (Adresses == null || Adresses.Count == 0)
+            {
+                throw new InvalidOperationException("Set Addresses list first!");
+            }
+
+            if (!SenderID.HasValue)
+            {
+                throw new InvalidOperationException("Set SenderID first!");
+            }
+
+            Adresses.ForEach(address =>
+            {
+                using (ZSocket requester = new ZSocket(ZContextProvider.GlobalContext, ZSocketType.REQ))
+                {
+                    requester.Connect(address);
+                    requester.Send(new ZFrame(BinarySerializer<ControlMessage>.ToByteArray(message)));
+                    //Console.WriteLine($"MS wysłane {message.Type} do {address}");
+
+                    using (ZFrame reply = requester.ReceiveFrame())
+                    {
+                        ControlMessage rcvedMsg = BinarySerializer<ControlMessage>.ToObject(reply.Read());
+                        succes = succes && rcvedMsg.Type.Equals(wantedType);
+                        //Console.WriteLine($"MS {rcvedMsg.Type} odebrane od {rcvedMsg.SenderId}");
+                    }
+                }
+            });
+
+            return succes;
         }
     }
 }

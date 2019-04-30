@@ -11,6 +11,7 @@ namespace Monitor.SpecificDataTypes
     {
         public readonly int ID;
         private readonly List<ConditionalVariable> ConditionalVariables = new List<ConditionalVariable>();
+
         public bool IsAcquired { get; private set; }
         public bool IsAcquiring { get; private set; }
 
@@ -36,15 +37,27 @@ namespace Monitor.SpecificDataTypes
 
         public void Acquire()
         {
-            IsAcquiring = true;
+            lock (this)
+            {
+                IsAcquiring = true;
+            }
+
             CommunicationHandler.Instance.SendAcquireMessage(this);
-            IsAcquired = true;
-            IsAcquiring = false;
+
+            lock (this)
+            {
+                IsAcquired = true;
+                IsAcquiring = false;
+            }
         }
 
         public void Release()
         {
-            IsAcquired = false;
+            lock (this)
+            {
+                IsAcquired = false;
+            }
+
             CommunicationHandler.Instance.SendReleaseMessage(this);
         }
     }

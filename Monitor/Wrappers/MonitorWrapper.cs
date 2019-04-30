@@ -15,8 +15,9 @@ namespace Monitor.Wrappers
     class MonitorWrapper
     {
         private MonitorConfiguration _config;
-        public int ID { get; private set; }
+        public int ID { get; private set; } = -1;
         private readonly List<DistributedMonitor> Monitors = new List<DistributedMonitor>();
+        private readonly object _monitorsLock = new object();
 
         #region Singleton
         public static MonitorWrapper Instance { get; } = new MonitorWrapper();
@@ -64,12 +65,26 @@ namespace Monitor.Wrappers
 
         public void CreateMonitor(int id)
         {
+            System.Threading.Monitor.Enter(_monitorsLock);
+
             if (Monitors.Any(m => m.ID.Equals(id)))
             {
                 throw new InvalidOperationException("Monitor already exists!");
             }
 
             Monitors.Add(new DistributedMonitor(id));
+
+            System.Threading.Monitor.Exit(_monitorsLock);
+        }
+
+        public void LockMonitors()
+        {
+            System.Threading.Monitor.Enter(_monitorsLock);
+        }
+
+        public void UnlockMonitors()
+        {
+            System.Threading.Monitor.Exit(_monitorsLock);
         }
 
         public DistributedMonitor GetMonitor(int id)

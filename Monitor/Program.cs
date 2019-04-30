@@ -34,6 +34,8 @@ namespace Monitor
             wrapper.CreateMonitor(1);
             DistributedMonitor monitor = wrapper.GetMonitor(1);
 
+            while(true)
+            { 
             monitor.Acquire();
 
             Console.WriteLine($"Critical section {wrapper.ID}");
@@ -41,6 +43,7 @@ namespace Monitor
             Console.WriteLine($"Relese critical section {wrapper.ID}");
 
             monitor.Release();
+            }
         }
     }
 }
