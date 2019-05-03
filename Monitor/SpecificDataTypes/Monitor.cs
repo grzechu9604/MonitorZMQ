@@ -59,9 +59,8 @@ namespace Monitor.SpecificDataTypes
             lock (this)
             {
                 IsAcquired = false;
+                CommunicationHandler.Instance.SendReleaseMessage(this);
             }
-
-            CommunicationHandler.Instance.SendReleaseMessage(this);
         }
 
         public Dictionary<int, object> GetConditionalVariablesValues()
