@@ -21,7 +21,7 @@ namespace Monitor.Communication.Handlers
         }
         #endregion
 
-        private const int Timeout = 1000;
+        private const int Timeout = 300;
 
         public void SendAcquireMessage(DistributedMonitor monitor)
         {
@@ -29,9 +29,11 @@ namespace Monitor.Communication.Handlers
             var message = MessageFactory.CreateMessage(
                     LamportTimeProvider.Instance.IncrementAndReturn(), monitor.ID, -1, -1, MessageTypes.MonitorAcquire);
             MessageHandler.MyCurrentMessage = message;
+            var alreadyAcceptedList = new List<int>();
             while (!succeded)
             {
-                succeded = MessageSender.Instance.BrodcastMessageWithResult(message, MessageTypes.Acknowledgement);
+                monitor.IsPassClearOrWait();
+                succeded = MessageSender.Instance.BrodcastMessageWithResult(message, MessageTypes.Acknowledgement, alreadyAcceptedList);
                 if (!succeded)
                 {
                     Thread.Sleep(Timeout);
@@ -42,8 +44,8 @@ namespace Monitor.Communication.Handlers
 
         public void SendReleaseMessage(DistributedMonitor monitor)
         {
-            var message = MessageFactory.CreateMessage(
-                LamportTimeProvider.Instance.IncrementAndReturn(), monitor.ID, -1, -1, MessageTypes.MonitorRelease);
+            var message = MessageFactory.CreateMessageWithValuesPropagation(
+                LamportTimeProvider.Instance.IncrementAndReturn(), MessageTypes.MonitorRelease, monitor);
             MessageSender.Instance.BrodcastMessage(message);
         }
 
@@ -58,10 +60,9 @@ namespace Monitor.Communication.Handlers
         {
             try
             {
-                var firstWaiter = cv.Waiters.First();
-                cv.Waiters.RemoveAll(w => w.Equals(firstWaiter));
+                var firstWaiter = cv.Waiters.GetFirstWaiterAndDeleteHim();
                 var message = MessageFactory.CreateMessage(
-                    LamportTimeProvider.Instance.IncrementAndReturn(), cv.Parent.ID, cv.ID, firstWaiter, MessageTypes.Signal);
+                    LamportTimeProvider.Instance.IncrementAndReturn(), cv.Parent.ID, cv.ID, firstWaiter.ProcessId, MessageTypes.Signal);
                 MessageSender.Instance.BrodcastMessage(message);
             }
             catch (InvalidOperationException)

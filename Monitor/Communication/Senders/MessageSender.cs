@@ -42,18 +42,16 @@ namespace Monitor.Communication.Senders
                 {
                     requester.Connect(address);
                     requester.Send(new ZFrame(BinarySerializer<ControlMessage>.ToByteArray(message)));
-                    //Console.WriteLine($"MS wysłane {message.Type} do {address}");
 
                     using (ZFrame reply = requester.ReceiveFrame())
                     {
                         ControlMessage rcvedMsg = BinarySerializer<ControlMessage>.ToObject(reply.Read());
-                        //Console.WriteLine($"MS {rcvedMsg.Type} odebrane od {rcvedMsg.SenderId}");
                     }
                 }
             });
         }
 
-        public bool BrodcastMessageWithResult(ControlMessage message, MessageTypes wantedType)
+        public bool BrodcastMessageWithResult(ControlMessage message, MessageTypes wantedType, List<int> alreadyAccepted)
         {
             bool succes = true;
 
@@ -73,13 +71,18 @@ namespace Monitor.Communication.Senders
                 {
                     requester.Connect(address);
                     requester.Send(new ZFrame(BinarySerializer<ControlMessage>.ToByteArray(message)));
-                    //Console.WriteLine($"MS wysłane {message.Type} do {address}");
 
                     using (ZFrame reply = requester.ReceiveFrame())
                     {
                         ControlMessage rcvedMsg = BinarySerializer<ControlMessage>.ToObject(reply.Read());
-                        succes = succes && rcvedMsg.Type.Equals(wantedType);
-                        //Console.WriteLine($"MS {rcvedMsg.Type} odebrane od {rcvedMsg.SenderId}");
+                        if (rcvedMsg.Type.Equals(wantedType) && !alreadyAccepted.Contains(rcvedMsg.SenderId))
+                        {
+                            alreadyAccepted.Add(message.SenderId);
+                        }
+                        else
+                        {
+                            succes = succes && (rcvedMsg.Type.Equals(wantedType) || alreadyAccepted.Contains(rcvedMsg.SenderId));
+                        }
                     }
                 }
             });

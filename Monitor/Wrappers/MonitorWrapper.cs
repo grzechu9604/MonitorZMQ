@@ -92,7 +92,7 @@ namespace Monitor.Wrappers
             System.Threading.Monitor.Exit(_monitorsLock);
         }
 
-        public DistributedMonitor GetMonitor(int id)
+        private DistributedMonitor GetMonitor(int id)
         {
             return Monitors.FirstOrDefault(m => m.ID.Equals(id));
         }

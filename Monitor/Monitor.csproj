@@ -61,6 +61,8 @@
     <Compile Include="SpecificDataTypes\ConditionalVariable.cs" />
     <Compile Include="SpecificDataTypes\Enums.cs" />
     <Compile Include="SpecificDataTypes\Monitor.cs" />
+    <Compile Include="SpecificDataTypes\Waiter.cs" />
+    <Compile Include="SpecificDataTypes\WaiterList.cs" />
     <Compile Include="Wrappers\MonitorWrapper.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,6 @@
 ﻿using Monitor.SpecificDataTypes;
 using System;
+using System.Collections.Generic;
 
 namespace Monitor.Communication.Messages
 {
@@ -12,5 +13,6 @@ namespace Monitor.Communication.Messages
         public int ConditionalVariableId { get; set; }
         public int SignalDestination { get; set; }
         public MessageTypes Type { get; set; }
+        public Dictionary<int, object> ConditionalVariableValues { get; set; }
     }
 }

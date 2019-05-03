@@ -27,41 +27,78 @@ namespace Monitor
 
         static void Main(string[] args)
         {
+            var random = new Random();
             MonitorConfiguration config = ConfigurationReader.Read(GetConfigPath());
             MonitorWrapper wrapper = MonitorWrapper.Instance;
             wrapper.ApplyConfig(config);
             wrapper.Start();
-            wrapper.CreateMonitorIfNotExists(1);
-            DistributedMonitor monitor = wrapper.GetMonitor(1);
+            DistributedMonitor monitor = wrapper.CreateMonitorIfNotExists(1);
 
-            while(true)
-            { 
-                monitor.Acquire();
-                Console.WriteLine($"Critical section {wrapper.ID}");
-                Thread.Sleep(1000);
-                var cv = monitor.CreateConditionalVariableIfNotExists(1);
-                if (wrapper.ID == 0 || wrapper.ID == 1 || wrapper.ID == 2)
+            // Przygotowanie zmiennej warunkowej
+            monitor.Acquire();
+            var cv = monitor.CreateConditionalVariableIfNotExists(1);
+            if (cv.Value == null)
+            {
+                cv.Value = 0;
+            }
+            monitor.Release();
+
+            if (wrapper.ID == 0 || wrapper.ID == 1 || wrapper.ID == 2)
+            {
+                while (true)
                 {
-                    Console.WriteLine($"Wait {wrapper.ID}");
-                    cv.Wait();
-                    Console.WriteLine($"After Wait {wrapper.ID}");
-                    Thread.Sleep(1000);
+                    //READERS
+                    monitor.Acquire();
+                    while (((int)cv.Value) < 0)
+                    {
+                        Console.WriteLine($"Wait {wrapper.ID} - pisarz w środku");
+                        cv.Wait();
+                    }
+                    cv.Value = (int)cv.Value + 1;
+                    monitor.Release();
+
+                    Console.WriteLine($"Czytam {wrapper.ID}");
+                    Thread.Sleep(random.Next(1000, 2000));
+                    Console.WriteLine($"Skończyłem {wrapper.ID}");
+
+                    monitor.Acquire();
+                    cv.Value = (int)cv.Value - 1;
+                    if ((int)cv.Value == 0)
+                    {
+                        cv.SignalAll();
+                    }
+                    monitor.Release();
+
+                    Console.WriteLine($"Wyszedłem i czekam {wrapper.ID}");
+                    Thread.Sleep(random.Next(3000, 5000));
                 }
-                else if (wrapper.ID == 23)
+            }
+            else
+            {
+                //WRITERS
+                while (true)
                 {
-                    Console.WriteLine($"Signal {wrapper.ID}");
-                    cv.Signal();
-                    Console.WriteLine($"After signal {wrapper.ID}");
-                }
-                else
-                {
-                    Console.WriteLine($"Signal all {wrapper.ID}");
+                    monitor.Acquire();
+                    while (((int)cv.Value) != 0)
+                    {
+                        Console.WriteLine($"Wait {wrapper.ID} - ktoś w środku");
+                        cv.Wait();
+                    }
+                    cv.Value = -1;
+                    monitor.Release();
+
+                    Console.WriteLine($"Piszę {wrapper.ID}");
+                    Thread.Sleep(random.Next(1000, 3000));
+                    Console.WriteLine($"Skończyłem {wrapper.ID}");
+
+                    monitor.Acquire();
+                    cv.Value = 0;
                     cv.SignalAll();
-                    Console.WriteLine($"After Signal all {wrapper.ID}");
-                }
-                Console.WriteLine($"Relese critical section {wrapper.ID}");
+                    monitor.Release();
 
-                monitor.Release();
+                    Console.WriteLine($"Wyszedłem i czekam {wrapper.ID}");
+                    Thread.Sleep(random.Next(3000, 5000));
+                }
             }
         }
     }

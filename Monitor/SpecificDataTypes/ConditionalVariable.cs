@@ -10,10 +10,11 @@ namespace Monitor.SpecificDataTypes
     class ConditionalVariable
     {
         public readonly int ID;
-        public List<int> Waiters = new List<int>();
+        public WaitersList Waiters = new WaitersList();
         public readonly DistributedMonitor Parent;
 
         public object Value { get; set; }
+        public ulong ValueTimestamp { set; get; }
 
         public ConditionalVariable(int id, DistributedMonitor monitor)
         {

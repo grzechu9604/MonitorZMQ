@@ -47,7 +47,12 @@ namespace Monitor.Communication.Handlers
         private static ControlMessage HandleWait(ControlMessage message)
         {
             var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
-            monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId).Waiters.Add(message.SenderId);
+            var waiter = new Waiter()
+            {
+                Timestamp = message.Timer,
+                ProcessId = message.SenderId
+            };
+            monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId).Waiters.Add(waiter);
             return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
         }
 
@@ -55,7 +60,7 @@ namespace Monitor.Communication.Handlers
         {
             var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
             var variable = monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId);
-            variable.Waiters.RemoveAll(e => e.Equals(message.SenderId));
+            variable.Waiters.RemoveWaiter(message.SignalDestination, message.Timer);
 
             if (message.SignalDestination.Equals(MonitorWrapper.Instance.ID))
             {
@@ -69,7 +74,7 @@ namespace Monitor.Communication.Handlers
         {
             var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
             var variable = monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId);
-            variable.Waiters.Clear();
+            variable.Waiters.RemoveAllWaiters(message.Timer);
 
             variable.WakeThread();
 
@@ -79,42 +84,65 @@ namespace Monitor.Communication.Handlers
         private static ControlMessage HandleMonitorAcquire(ControlMessage message)
         {
             MessageTypes responseType;
-            var wrapper = MonitorWrapper.Instance;
-            wrapper.LockMonitors();
-            var monitor = MonitorWrapper.Instance.GetMonitor(message.MonitorId);
-            if (monitor == null) // let go if you don't have this monitor
+            MonitorWrapper.Instance.LockMonitors();
+            var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
+            lock (monitor)
             {
-                responseType = MessageTypes.Acknowledgement;
-            }
-            else
-            {
-                lock (monitor)
+                lock (_currentMessageLock)
                 {
-                    lock (_currentMessageLock)
+                    if (monitor.PassedContains(message.SenderId))
                     {
-                        if (monitor.IsAcquired
-                            || (monitor.IsAcquiring && MyCurrentMessage != null && MyCurrentMessage.Timer < message.Timer)
-                            || (monitor.IsAcquiring && MyCurrentMessage != null && MyCurrentMessage.Timer == message.Timer && wrapper.ID < message.SenderId))
-                        {
-                            responseType = MessageTypes.Negation;
-                        }
-                        else
-                        {
-                            responseType = MessageTypes.Acknowledgement;
-                        }
+                        // konsekwente przepuszczanie
+                        //Console.WriteLine($"Ustępuję {message.SenderId}");
+                        responseType = MessageTypes.Acknowledgement;
+                    }
+                    else if (monitor.IsAcquired
+                        || (monitor.IsAcquiring && MyCurrentMessage != null && MyCurrentMessage.Timer < message.Timer)
+                        || (monitor.IsAcquiring && MyCurrentMessage != null && MyCurrentMessage.Timer == message.Timer && MonitorWrapper.Instance.ID < message.SenderId))
+                    {
+                        //Console.WriteLine($"Nie ustępuję {message.SenderId}");
+                        responseType = MessageTypes.Negation;
+                    }
+                    else
+                    {
+                        //Console.WriteLine($"Ustępuję {message.SenderId}");
+                        responseType = MessageTypes.Acknowledgement;
+                        monitor.Pass(message.SenderId);
                     }
                 }
             }
 
             var responseMessage = MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, -1, -1, responseType);
 
-            wrapper.UnlockMonitors();
+            MonitorWrapper.Instance.UnlockMonitors();
 
             return responseMessage;
         }
 
         private static ControlMessage HandleMonitorRelease(ControlMessage message)
         {
+            MonitorWrapper.Instance.LockMonitors();
+            var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
+
+            lock (monitor)
+            {
+                if (message.ConditionalVariableValues != null)
+                {
+                    message.ConditionalVariableValues.ToList().ForEach(e =>
+                    {
+                        var cv = monitor.CreateConditionalVariableIfNotExists(e.Key);
+                        if (cv.ValueTimestamp < message.Timer)
+                        {
+                            cv.Value = e.Value;
+                            cv.ValueTimestamp = message.Timer;
+                        }
+                    });
+                }
+
+                monitor.DeleteFromPass(message.SenderId);
+            }
+            MonitorWrapper.Instance.UnlockMonitors();
+
             return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, -1, -1, MessageTypes.Acknowledgement);
         }
 

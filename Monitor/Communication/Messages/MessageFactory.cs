@@ -20,6 +20,18 @@ namespace Monitor.Communication.Messages
             };
         }
 
+        public static ControlMessage CreateMessageWithValuesPropagation(ulong timer, MessageTypes type, DistributedMonitor monitor)
+        {
+            return new ControlMessage()
+            {
+                SenderId = MonitorWrapper.Instance.ID,
+                Timer = timer,
+                MonitorId = monitor.ID,
+                Type = type,
+                ConditionalVariableValues = monitor.GetConditionalVariablesValues()
+            };
+        }
+
         public static ZFrame CreateMessageZFrame(ulong timer, int monitorId, int variableId, int signalDestId, MessageTypes type)
         {
             ControlMessage message = CreateMessage(timer, monitorId, variableId, signalDestId, type);
