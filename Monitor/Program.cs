@@ -17,6 +17,7 @@ namespace Monitor
             [2] = "config2.xml",
             [3] = "config3.xml",
             [4] = "config4.xml",
+            [5] = "config5.xml"
         };
 
         static string GetConfigPath()
@@ -58,7 +59,7 @@ namespace Monitor
                     monitor.Release();
 
                     Console.WriteLine($"Czytam {wrapper.ID}");
-                    Thread.Sleep(random.Next(2000, 3000));
+                    Thread.Sleep(random.Next(1000, 3000));
                     Console.WriteLine($"Skończyłem {wrapper.ID}");
 
                     monitor.Acquire();
@@ -88,7 +89,7 @@ namespace Monitor
                     monitor.Release();
 
                     Console.WriteLine($"Piszę {wrapper.ID}");
-                    Thread.Sleep(random.Next(2000, 3000));
+                    Thread.Sleep(random.Next(1000, 3000));
                     Console.WriteLine($"Skończyłem {wrapper.ID}");
 
                     monitor.Acquire();

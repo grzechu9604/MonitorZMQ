@@ -92,20 +92,16 @@ namespace Monitor.Communication.Handlers
                 {
                     if (monitor.PassedContains(message.SenderId))
                     {
-                        // konsekwente przepuszczanie
-                        //Console.WriteLine($"Ustępuję {message.SenderId}");
                         responseType = MessageTypes.Acknowledgement;
                     }
                     else if (monitor.IsAcquired
                         || (monitor.IsAcquiring && MyCurrentMessage != null && MyCurrentMessage.Timer < message.Timer)
                         || (monitor.IsAcquiring && MyCurrentMessage != null && MyCurrentMessage.Timer == message.Timer && MonitorWrapper.Instance.ID < message.SenderId))
                     {
-                        //Console.WriteLine($"Nie ustępuję {message.SenderId}");
                         responseType = MessageTypes.Negation;
                     }
                     else
                     {
-                        //Console.WriteLine($"Ustępuję {message.SenderId}");
                         responseType = MessageTypes.Acknowledgement;
                         monitor.Pass(message.SenderId);
                     }
