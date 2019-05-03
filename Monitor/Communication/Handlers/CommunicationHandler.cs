@@ -34,12 +34,7 @@ namespace Monitor.Communication.Handlers
             {
                 monitor.IsPassClearOrWait();
                 succeded = MessageSender.Instance.BrodcastMessageWithResult(message, MessageTypes.Acknowledgement, alreadyAcceptedList);
-                if (!succeded)
-                {
-                    Thread.Sleep(Timeout);
-                }
             }
-
         }
 
         public void SendReleaseMessage(DistributedMonitor monitor)
