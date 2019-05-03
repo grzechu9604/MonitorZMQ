@@ -58,7 +58,7 @@ namespace Monitor
                     monitor.Release();
 
                     Console.WriteLine($"Czytam {wrapper.ID}");
-                    Thread.Sleep(random.Next(1000, 2000));
+                    Thread.Sleep(random.Next(2000, 3000));
                     Console.WriteLine($"Skończyłem {wrapper.ID}");
 
                     monitor.Acquire();
@@ -88,7 +88,7 @@ namespace Monitor
                     monitor.Release();
 
                     Console.WriteLine($"Piszę {wrapper.ID}");
-                    Thread.Sleep(random.Next(1000, 3000));
+                    Thread.Sleep(random.Next(2000, 3000));
                     Console.WriteLine($"Skończyłem {wrapper.ID}");
 
                     monitor.Acquire();

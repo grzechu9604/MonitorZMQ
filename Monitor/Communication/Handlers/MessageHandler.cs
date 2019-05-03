@@ -35,7 +35,7 @@ namespace Monitor.Communication.Handlers
             }
         }
 
-        private readonly Dictionary<MessageTypes, Func<ControlMessage, ControlMessage>> handlers = new Dictionary<MessageTypes, Func<ControlMessage, ControlMessage>>()
+        private readonly Dictionary<MessageTypes, Func<ControlMessage, ulong, ControlMessage>> handlers = new Dictionary<MessageTypes, Func<ControlMessage, ulong, ControlMessage>>()
         {
             [MessageTypes.MonitorAcquire] = HandleMonitorAcquire,
             [MessageTypes.MonitorRelease] = HandleMonitorRelease,
@@ -44,7 +44,7 @@ namespace Monitor.Communication.Handlers
             [MessageTypes.SignalAll] = HandleSignalAll
         };
 
-        private static ControlMessage HandleWait(ControlMessage message)
+        private static ControlMessage HandleWait(ControlMessage message, ulong timer)
         {
             var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
             var waiter = new Waiter()
@@ -53,10 +53,10 @@ namespace Monitor.Communication.Handlers
                 ProcessId = message.SenderId
             };
             monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId).Waiters.Add(waiter);
-            return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
+            return MessageFactory.CreateMessage(timer, message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
         }
 
-        private static ControlMessage HandleSignal(ControlMessage message)
+        private static ControlMessage HandleSignal(ControlMessage message, ulong timer)
         {
             var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
             var variable = monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId);
@@ -67,10 +67,10 @@ namespace Monitor.Communication.Handlers
                 variable.WakeThread();
             }
 
-            return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
+            return MessageFactory.CreateMessage(timer, message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
         }
 
-        private static ControlMessage HandleSignalAll(ControlMessage message)
+        private static ControlMessage HandleSignalAll(ControlMessage message, ulong timer)
         {
             var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
             var variable = monitor.CreateConditionalVariableIfNotExists(message.ConditionalVariableId);
@@ -78,10 +78,10 @@ namespace Monitor.Communication.Handlers
 
             variable.WakeThread();
 
-            return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
+            return MessageFactory.CreateMessage(timer, message.MonitorId, message.ConditionalVariableId, -1, MessageTypes.Acknowledgement);
         }
 
-        private static ControlMessage HandleMonitorAcquire(ControlMessage message)
+        private static ControlMessage HandleMonitorAcquire(ControlMessage message, ulong timer)
         {
             MessageTypes responseType;
             MonitorWrapper.Instance.LockMonitors();
@@ -112,14 +112,14 @@ namespace Monitor.Communication.Handlers
                 }
             }
 
-            var responseMessage = MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, -1, -1, responseType);
+            var responseMessage = MessageFactory.CreateMessage(timer, message.MonitorId, -1, -1, responseType);
 
             MonitorWrapper.Instance.UnlockMonitors();
 
             return responseMessage;
         }
 
-        private static ControlMessage HandleMonitorRelease(ControlMessage message)
+        private static ControlMessage HandleMonitorRelease(ControlMessage message, ulong timer)
         {
             MonitorWrapper.Instance.LockMonitors();
             var monitor = MonitorWrapper.Instance.CreateMonitorIfNotExists(message.MonitorId);
@@ -131,7 +131,7 @@ namespace Monitor.Communication.Handlers
                     message.ConditionalVariableValues.ToList().ForEach(e =>
                     {
                         var cv = monitor.CreateConditionalVariableIfNotExists(e.Key);
-                        if (cv.ValueTimestamp < message.Timer)
+                        if (cv.ValueTimestamp <= message.Timer)
                         {
                             cv.Value = e.Value;
                             cv.ValueTimestamp = message.Timer;
@@ -143,20 +143,20 @@ namespace Monitor.Communication.Handlers
             }
             MonitorWrapper.Instance.UnlockMonitors();
 
-            return MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), message.MonitorId, -1, -1, MessageTypes.Acknowledgement);
+            return MessageFactory.CreateMessage(timer, message.MonitorId, -1, -1, MessageTypes.Acknowledgement);
         }
 
         public ControlMessage HandleMessage(ControlMessage message)
         {
+            var timer = LamportTimeProvider.Instance.IncrementAndReturnWithMin(message.Timer);
             ControlMessage returnMessage;
             try
             {
-                LamportTimeProvider.Instance.IncrementAndReturnWithMin(message.Timer);
-                returnMessage = handlers[message.Type].Invoke(message);
+                returnMessage = handlers[message.Type].Invoke(message, timer);
             }
             catch (KeyNotFoundException)
             {
-                returnMessage = MessageFactory.CreateMessage(LamportTimeProvider.Instance.IncrementAndReturn(), -1, -1, -1, MessageTypes.Reset);
+                returnMessage = MessageFactory.CreateMessage(timer, -1, -1, -1, MessageTypes.Reset);
             }
 
             return returnMessage;

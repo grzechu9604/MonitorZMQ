@@ -51,7 +51,7 @@ namespace Monitor.Communication.Senders
             });
         }
 
-        public bool BrodcastMessageWithResult(ControlMessage message, MessageTypes wantedType, List<int> alreadyAccepted)
+        public bool BrodcastMessageWithResult(ControlMessage message, MessageTypes wantedType)
         {
             bool succes = true;
 
@@ -75,14 +75,7 @@ namespace Monitor.Communication.Senders
                     using (ZFrame reply = requester.ReceiveFrame())
                     {
                         ControlMessage rcvedMsg = BinarySerializer<ControlMessage>.ToObject(reply.Read());
-                        if (rcvedMsg.Type.Equals(wantedType) && !alreadyAccepted.Contains(rcvedMsg.SenderId))
-                        {
-                            alreadyAccepted.Add(message.SenderId);
-                        }
-                        else
-                        {
-                            succes = succes && (rcvedMsg.Type.Equals(wantedType) || alreadyAccepted.Contains(rcvedMsg.SenderId));
-                        }
+                        succes = succes && rcvedMsg.Type.Equals(wantedType);
                     }
                 }
             });

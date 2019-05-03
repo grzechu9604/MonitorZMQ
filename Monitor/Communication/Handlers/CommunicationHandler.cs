@@ -29,11 +29,10 @@ namespace Monitor.Communication.Handlers
             var message = MessageFactory.CreateMessage(
                     LamportTimeProvider.Instance.IncrementAndReturn(), monitor.ID, -1, -1, MessageTypes.MonitorAcquire);
             MessageHandler.MyCurrentMessage = message;
-            var alreadyAcceptedList = new List<int>();
             while (!succeded)
             {
                 monitor.IsPassClearOrWait();
-                succeded = MessageSender.Instance.BrodcastMessageWithResult(message, MessageTypes.Acknowledgement, alreadyAcceptedList);
+                succeded = MessageSender.Instance.BrodcastMessageWithResult(message, MessageTypes.Acknowledgement);
             }
         }
 
