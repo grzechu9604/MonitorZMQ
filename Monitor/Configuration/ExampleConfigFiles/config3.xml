@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MonitorConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Adresses>
+    <string>tcp://127.0.0.1:50001</string>
+    <string>tcp://127.0.0.1:70001</string>
+    <string>tcp://127.0.0.1:80001</string>
+	<string>tcp://127.0.0.1:90001</string>
+  </Adresses>
+  <ServerAddress>tcp://127.0.0.1:5554</ServerAddress>
+  <ListeningAddress>tcp://127.0.0.1:60001</ListeningAddress>
+  <IsServer>false</IsServer>
+</MonitorConfiguration>
